@@ -139,11 +139,12 @@ def convert(args):
     files.sort()
 
     print('Converting files from AAC to WAV')
-    for fname in tqdm(files):
+    for fname in tqdm(files,miniters=10000):
         outfile = fname.replace('.m4a','.wav')
         out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(fname,outfile), shell=True)
-        if out != 0:
-            raise ValueError('Conversion failed %s.'%fname)
+        #out = subprocess.call('rm %s' %(fname), shell=True)
+        #if out != 0:
+        #    raise ValueError('Conversion failed %s.'%fname)
 
 ## ========== ===========
 ## Split MUSAN for faster random access
@@ -168,7 +169,7 @@ def split_musan(args):
 ## Main script
 ## ========== ===========
 if __name__ == "__main__":
-
+    print("dataprep run")
     if not os.path.exists(args.save_path):
         raise ValueError('Target directory does not exist.')
 
@@ -194,12 +195,14 @@ if __name__ == "__main__":
         download(args,fileparts)
 
     if args.extract:
-        concatenate(args, files)
-        for file in files:
-            full_extract(args,os.path.join(args.save_path,file.split()[1]))
+        #concatenate(args, files)
+        #for file in files:
+        #    full_extract(args,os.path.join(args.save_path,file.split()[1]))
         out = subprocess.call('mv %s/dev/aac/* %s/aac/ && rm -r %s/dev' %(args.save_path,args.save_path,args.save_path), shell=True)
         out = subprocess.call('mv %s/wav %s/voxceleb1' %(args.save_path,args.save_path), shell=True)
         out = subprocess.call('mv %s/aac %s/voxceleb2' %(args.save_path,args.save_path), shell=True)
 
     if args.convert:
         convert(args)
+        print("completed")
+        

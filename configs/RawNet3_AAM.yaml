@@ -9,5 +9,5 @@ trainfunc: aamsoftmax
 lr_decay: 0.75
 weight_decay: 5e-05
 max_seg_per_spk: 500
-augment: True
+augment: False #True
 save_path: exps/RawNet3_AAM
