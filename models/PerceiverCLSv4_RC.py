@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-from TDNN import TDNNBlock, BatchNorm1d
+from models.TDNN import TDNNBlock, BatchNorm1d
 
 #This code is from
 # https://medium.com/@curttigges/the-annotated-perceiver-74752113eefb
@@ -161,7 +161,7 @@ class PerceiverCLS(nn.Module):
     """
     def __init__(
         self, ch_in, latent_dim, embed_dim, embed_reps, attn_mlp_dim, trnfr_mlp_dim, trnfr_heads, 
-        dropout, trnfr_layers, n_blocks, max_len,final_layer):
+        dropout, trnfr_layers, n_blocks, max_len,final_layer, **kwargs):
         super().__init__()
         
         self.ch_expansion = TDNNBlock(

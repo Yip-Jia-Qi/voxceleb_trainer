@@ -7,6 +7,7 @@ Authors
 import torch  # noqa: F401
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 #from speechbrain.dataio.dataio import length_to_mask
 #from speechbrain.nnet.CNN import Conv1d as _Conv1d
 #from speechbrain.nnet.normalization import BatchNorm1d as _BatchNorm1d
@@ -374,6 +375,59 @@ class BatchNorm1d(_BatchNorm1d):
     def __init__(self, *args, **kwargs):
         super().__init__(skip_transpose=True, *args, **kwargs)
 
+def get_padding_elem(L_in: int, stride: int, kernel_size: int, dilation: int):
+    """This function computes the number of elements to add for zero-padding.
+
+    Arguments
+    ---------
+    L_in : int
+    stride: int
+    kernel_size : int
+    dilation : int
+    """
+    if stride > 1:
+        padding = [math.floor(kernel_size / 2), math.floor(kernel_size / 2)]
+
+    else:
+        L_out = (
+            math.floor((L_in - dilation * (kernel_size - 1) - 1) / stride) + 1
+        )
+        padding = [
+            math.floor((L_in - L_out) / 2),
+            math.floor((L_in - L_out) / 2),
+        ]
+    return padding
+
+
+
+def get_padding_elem_transposed(
+    L_out: int,
+    L_in: int,
+    stride: int,
+    kernel_size: int,
+    dilation: int,
+    output_padding: int,
+    ):
+    """This function computes the required padding size for transposed convolution
+
+    Arguments
+    ---------
+    L_out : int
+    L_in : int
+    stride: int
+    kernel_size : int
+    dilation : int
+    output_padding : int
+    """
+
+    padding = -0.5 * (
+        L_out
+        - (L_in - 1) * stride
+        - dilation * (kernel_size - 1)
+        - output_padding
+        - 1
+    )
+    return int(padding)
 
 class TDNNBlock(nn.Module):
     """An implementation of TDNN.

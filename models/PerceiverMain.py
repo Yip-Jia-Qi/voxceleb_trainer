@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import math
-from PerceiverCLSv4_RC import PerceiverCLS
-from FilterBank import Filterbank
+from models.PerceiverCLSv4_RC import PerceiverCLS
+from models.FBank import Fbank
 
 class PerceiverWrapper(nn.Module):
     def __init__(self, encoder, embedding_model):
@@ -16,7 +16,7 @@ class PerceiverWrapper(nn.Module):
         return x
 
 def MainModel(**kwargs):
-    encoder = Filterbank(n_mels = kwargs['ch_in'])
+    encoder = Fbank(**kwargs)
     embedding_model = PerceiverCLS(**kwargs)
     return PerceiverWrapper(encoder, embedding_model)
 
