@@ -29,6 +29,8 @@ class SpeakerNet(nn.Module):
 
         SpeakerNetModel = importlib.import_module("models." + model).__getattribute__("MainModel")
         self.__S__ = SpeakerNetModel(**kwargs)
+        self.total_params = sum(p.numel() for p in self.__S__.parameters() if p.requires_grad)
+        print(f'model has {self.total_params/1000000}M parameters')
 
         LossFunction = importlib.import_module("loss." + trainfunc).__getattribute__("LossFunction")
         self.__L__ = LossFunction(**kwargs)

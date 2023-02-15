@@ -39,7 +39,8 @@ class LossFunction(nn.Module):
         # cos(theta)
         cosine = F.linear(F.normalize(x), F.normalize(self.weight))
         # cos(theta + m)
-        sine = torch.sqrt((1.0 - torch.mul(cosine, cosine)).clamp(0, 1))
+        #sine = torch.sqrt((1.0 - torch.mul(cosine, cosine)).clamp(0, 1))
+        sine = torch.sqrt((1.000001 - torch.mul(cosine, cosine)).clamp(0, 1)) #potential nan loss fix refer to https://github.com/ronghuaiyang/arcface-pytorch/issues/32
         phi = cosine * self.cos_m - sine * self.sin_m
 
         if self.easy_margin:

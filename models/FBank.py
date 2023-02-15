@@ -73,14 +73,14 @@ class Fbank(torch.nn.Module):
         f_min=0,
         f_max=None,
         n_fft=400,
-        n_mels=40,
+        n_mels=80,
         filter_shape="triangular",
         param_change_factor=1.0,
         param_rand_factor=0.0,
-        left_frames=5,
+        left_frames=5, #only relevant when context is true
         right_frames=5,
         win_length=25,
-        hop_length=10,
+        hop_length=5, #was originally 10
         **kwargs
     ):
         super().__init__()

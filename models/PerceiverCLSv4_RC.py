@@ -89,7 +89,7 @@ class PerceiverBlock(nn.Module):
         
         self.cross_attention = nn.ModuleList([
             PerceiverAttention(
-            embed_dim, attn_mlp_dim, n_heads=1, dropout=dropout)
+            embed_dim, attn_mlp_dim, n_heads=8, dropout=dropout)
             for _ in range(embed_reps)])
 
         self.latent_transformer = LatentTransformer(

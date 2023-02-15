@@ -74,12 +74,12 @@ parser.add_argument('--rir_path',       type=str,   default="data/RIRS_NOISES/si
 parser.add_argument('--n_mels',         type=int,   default=80,     help='Number of mel filterbanks')
 parser.add_argument('--log_input',      type=bool,  default=False,  help='Log input features')
 parser.add_argument('--model',          type=str,   default="",     help='Name of model definition')
-parser.add_argument('--encoder_type',   type=str,   default="SAP",  help='Type of encoder')
-parser.add_argument('--nOut',           type=int,   default=512,    help='Embedding size in the last FC layer.')
-# parser.add_argument('--sinc_stride',    type=int,   default=10,    help='Stride size of the first analytic filterbank layer of RawNet3')
+parser.add_argument('--encoder_type',   type=str,   default="ECA",  help='Type of encoder')
+parser.add_argument('--nOut',           type=int,   default=1024,    help='Embedding size in the last FC layer.')
+parser.add_argument('--sinc_stride',    type=int,   default=10,    help='Stride size of the first analytic filterbank layer of RawNet3')
 
 parser.add_argument('--ch_in', type=int, default=80, help='number for filders for the pre-encoder ')
-parser.add_argument('--latent_dim', type=int, default=192, help='the dimension to squeeze the time dimension to')
+parser.add_argument('--latent_dim', type=int, default=512, help='the dimension to squeeze the time dimension to')
 parser.add_argument('--embed_dim', type=int, default=256, help='number of filters for the post-encoder')
 parser.add_argument('--embed_reps', type=int, default=2, help='number of time to repeat the embedding layer')
 parser.add_argument('--attn_mlp_dim', type=int, default=256, help='width of the mlp layer in the cross attention transformer')
@@ -87,7 +87,7 @@ parser.add_argument('--trnfr_mlp_dim', type=int, default=256, help='width of the
 parser.add_argument('--trnfr_heads', type=int, default=8, help='number of heads to use in the latent transformer layers cross attention')
 parser.add_argument('--dropout', type=int, default=0.2, help='percentage dropout to use throughout the model')
 parser.add_argument('--trnfr_layers', type=int, default=3, help='number of latent transformer layers in each perceiver blocks')
-parser.add_argument('--n_blocks', type=int, default=2, help='number of perceiver blocks to use in the model')
+parser.add_argument('--n_blocks', type=int, default=4, help='number of perceiver blocks to use in the model')
 parser.add_argument('--max_len', type=int, default=10000, help='maaxlen for the positional encoding layer')
 parser.add_argument('--final_layer', type=str, default='1dE', help='which dimension to compress in the final layer of perceiver')
 
@@ -128,8 +128,30 @@ def main_worker(gpu, ngpus_per_node, args):
 
     args.gpu = gpu
 
+    ## get processor information
+    import platform
+    print(platform.processor())
+
     ## Load models
-    s = SpeakerNet(**vars(args))
+    from models.PerceiverMain import MainModel
+    #from models.RawNet3 import MainModel #--encoder_type ECA
+    #from models.ResNetSE34L import MainModel #--encoder_type SAP
+    s = MainModel(**vars(args))
+    total_params = sum(p.numel() for p in s.parameters() if p.requires_grad)
+    print(f'model has {total_params/1000000}M parameters')
+    
+    import time
+    x = torch.rand(5,48000)
+    total_time = 0
+    for i in range(10):
+        t0 = time.time()
+        out = s(x)
+        t1 = time.time()
+        total_time += t1-t0
+    print(out.shape)
+    print(f'time per batch is {total_time/10}, real time batch is 5 x 6 = 30 seconds, rtf is {total_time/10/30}.')
+    print("done")
+    return
 
     if args.distributed:
         os.environ['MASTER_ADDR']='localhost'
