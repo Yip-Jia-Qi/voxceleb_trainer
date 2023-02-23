@@ -67,8 +67,8 @@ parser.add_argument('--train_list',     type=str,   default="data/train_list.txt
 parser.add_argument('--test_list',      type=str,   default="data/veri_test2.txt",   help='Evaluation list')
 parser.add_argument('--train_path',     type=str,   default="/scratch/jiaqi006/data/voxceleb2", help='Absolute path to the train set')
 parser.add_argument('--test_path',      type=str,   default="/scratch/jiaqi006/data/voxceleb1", help='Absolute path to the test set')
-parser.add_argument('--musan_path',     type=str,   default="data/musan_split", help='Absolute path to the test set')
-parser.add_argument('--rir_path',       type=str,   default="data/RIRS_NOISES/simulated_rirs", help='Absolute path to the test set')
+parser.add_argument('--musan_path',     type=str,   default="/scratch/jiaqi006/data/musan", help='Absolute path to the test set')
+parser.add_argument('--rir_path',       type=str,   default="/scratch/jiaqi006/data/RIRS_NOISES/simulated_rirs", help='Absolute path to the test set')
 
 ## Model definition
 parser.add_argument('--n_mels',         type=int,   default=80,     help='Number of mel filterbanks')
@@ -77,7 +77,7 @@ parser.add_argument('--log_input',      type=bool,  default=False,  help='Log in
 parser.add_argument('--model',          type=str,   default="",     help='Name of model definition')
 parser.add_argument('--encoder_type',   type=str,   default="fbank",  help='Type of encoder')
 parser.add_argument('--nOut',           type=int,   default=512,    help='Embedding size in the last FC layer.')
-# parser.add_argument('--sinc_stride',    type=int,   default=10,    help='Stride size of the first analytic filterbank layer of RawNet3')
+parser.add_argument('--sinc_stride',    type=int,   default=10,    help='Stride size of the first analytic filterbank layer of RawNet3')
 
 parser.add_argument('--ch_in', type=int, default=80, help='number for filders for the pre-encoder ')
 parser.add_argument('--latent_dim', type=int, default=192, help='the dimension to squeeze the time dimension to')
@@ -86,7 +86,7 @@ parser.add_argument('--embed_reps', type=int, default=2, help='number of time to
 parser.add_argument('--attn_mlp_dim', type=int, default=256, help='width of the mlp layer in the cross attention transformer')
 parser.add_argument('--trnfr_mlp_dim', type=int, default=256, help='width of the mlp layer in the latent transformer')
 parser.add_argument('--trnfr_heads', type=int, default=8, help='number of heads to use in the latent transformer layers cross attention')
-parser.add_argument('--dropout', type=int, default=0.2, help='percentage dropout to use throughout the model')
+parser.add_argument('--dropout', type=float, default=0.2, help='percentage dropout to use throughout the model')
 parser.add_argument('--trnfr_layers', type=int, default=3, help='number of latent transformer layers in each perceiver blocks')
 parser.add_argument('--n_blocks', type=int, default=2, help='number of perceiver blocks to use in the model')
 parser.add_argument('--max_len', type=int, default=10000, help='maaxlen for the positional encoding layer')
@@ -184,6 +184,9 @@ def main_worker(gpu, ngpus_per_node, args):
         print("Model {} loaded from previous state!".format(modelfiles[-1]))
         it = int(os.path.splitext(os.path.basename(modelfiles[-1]))[0][5:]) + 1
 
+    pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
+    scorefile.write(f'\nTotal parameters: {pytorch_total_params}')
+
     for ii in range(1,it):
         trainer.__scheduler__.step()
 
@@ -193,7 +196,12 @@ def main_worker(gpu, ngpus_per_node, args):
         pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
 
         print('Total parameters: ',pytorch_total_params)
+        scorefile.write(f'\nTotal parameters: {pytorch_total_params}')
         print('Test list',args.test_list)
+        print(f'\nEval Length {args.eval_frames}')
+        scorefile.write(f'\nTest list {args.test_list}')
+        scorefile.write(f'\nEval Length {args.eval_frames}')
+
         
         sc, lab, _ = trainer.evaluateFromList(**vars(args))
 
@@ -205,6 +213,7 @@ def main_worker(gpu, ngpus_per_node, args):
             mindcf, threshold = ComputeMinDcf(fnrs, fprs, thresholds, args.dcf_p_target, args.dcf_c_miss, args.dcf_c_fa)
 
             print('\n',time.strftime("%Y-%m-%d %H:%M:%S"), "VEER {:2.4f}".format(result[1]), "MinDCF {:2.5f}".format(mindcf))
+            scorefile.write(f'\nVEER {result[1]} \nMinDCF {mindcf}')
 
         return
 
@@ -280,6 +289,8 @@ def main():
     print('PyTorch Version:', torch.__version__)
     print('Number of GPUs:', torch.cuda.device_count())
     print('Save path:',args.save_path)
+    print('Start time:', time.strftime("%Y-%m-%d %H:%M:%S"))
+    print('dropout',args.dropout)
 
     if args.distributed:
         mp.spawn(main_worker, nprocs=n_gpus, args=(n_gpus, args))

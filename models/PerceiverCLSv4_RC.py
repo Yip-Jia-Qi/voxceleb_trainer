@@ -30,7 +30,7 @@ class PerceiverAttention(nn.Module):
         # used for cross-attention; otherwise same as x
 
         # attention block
-        out = self.lnorm1(x)
+        x = self.lnorm1(x)
         out, _ = self.attn(query=q, key=x, value=x)
         # out will be of shape [LATENT_DIM x BATCH_SIZE x EMBED_DIM] after matmul
         # when used for cross-attention; otherwise same as x
@@ -82,7 +82,7 @@ class LatentTransformer(nn.Module):
 class PerceiverBlock(nn.Module):
     """Block consisting of one cross-attention layer and one latent transformer
     """
-    def __init__(self, embed_dim, embed_reps, attn_mlp_dim, trnfr_mlp_dim, trnfr_heads, dropout, trnfr_layers):
+    def __init__(self, embed_dim, embed_reps, attn_mlp_dim, trnfr_mlp_dim, trnfr_heads, dropout, trnfr_layers, **kwargs):
         super().__init__()
         
         self.embed_reps = embed_reps

@@ -279,6 +279,7 @@ def main():
     print('PyTorch Version:', torch.__version__)
     print('Number of GPUs:', torch.cuda.device_count())
     print('Save path:',args.save_path)
+    print('Start time:', time.strftime("%Y-%m-%d %H:%M:%S"))
 
     if args.distributed:
         mp.spawn(main_worker, nprocs=n_gpus, args=(n_gpus, args))
